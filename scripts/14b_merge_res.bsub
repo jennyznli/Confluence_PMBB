@@ -1,0 +1,35 @@
+#!/bin/bash
+#BSUB -J "anc_merge_regenie[1-8]"
+#BSUB -o ../log/anc_merge_regenie.%I.out
+#BSUB -e ../log/anc_merge_regenie.%I.err
+#BSUB -R "rusage[mem=8GB]"
+
+# define ancestries
+ANC_GROUPS=("AFR" "EUR" "MEN" "SAS" "EAS" "AMR" "OCN" "MIX")
+ANC="${ANC_GROUPS[$((LSB_JOBINDEX - 1))]}"
+
+# Set up environment
+WDIR="/project/knathans_tecac/jenny/breast/analysis/${ANC}/regenie"
+cd "$WDIR"
+
+merged_file="${WDIR}/${ANC}_step2_genome.regenie"
+file_count=0
+chr_files=()
+
+for chr in {1..22}; do
+    chr_file="${ANC}_step2_chr${chr}_Y1.regenie"
+    chr_files+=("$chr_file")
+    ((file_count++))
+done
+
+head -1 "${chr_files[0]}" > "$merged_file"
+
+for chr_file in "${chr_files[@]}"; do
+    tail -n +2 "$chr_file" >> "$merged_file"
+done
+
+echo "Merged ${file_count} chromosome files for ${ANC}"
+
+# ---------------------------
+# Test single ancestry:
+# bsub -J "anc_merge_regenie[1]" < 13b_merge_res.bsub

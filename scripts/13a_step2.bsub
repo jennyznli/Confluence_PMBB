@@ -1,0 +1,36 @@
+#!/bin/bash
+#BSUB -J "all_step2[1-22]" 
+#BSUB -o ../log/all_step2.%I.out
+#BSUB -e ../log/all_step2.%I.err
+#BSUB -n 4
+#BSUB -R "rusage[mem=16GB]"
+#BSUB -W 2:00
+
+### ALL ANCESTRIES: RUN STEP 2 ###
+module load regenie/3.4.1
+
+CHR=$LSB_JOBINDEX
+
+# directory setup
+ADIR="/project/knathans_tecac/jenny/breast/analysis/ALL"
+OUT_DIR="$ADIR/regenie"
+mkdir -p "$OUT_DIR"
+cd "$OUT_DIR"
+
+regenie --step 2 \
+  --pgen "${ADIR}/step2_chr/step2_chr${CHR}_ind" \
+  --phenoFile "${ADIR}/cov/phenotype.txt" \
+  --covarFile "${ADIR}/cov/covariates.txt" \
+  --pred "ALL_step1_pred.list" \
+  --bsize 400 \
+  --threads 4 \
+  --bt \
+  --minMAC 30 \
+  --minINFO 0.2 \
+  --firth --approx \
+  --strict \
+  --test additive \
+  --out "ALL_step2_chr${CHR}"
+
+# ---------------------------
+# bsub -J "all_step2[1]" < 13a_step2.bsub

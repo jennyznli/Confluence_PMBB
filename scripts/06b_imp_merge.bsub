@@ -1,0 +1,43 @@
+#!/bin/bash
+#BSUB -J "anc_chr[1-176]"   
+#BSUB -o ../log/anc_merge_chr%I.o
+#BSUB -e ../log/anc_merge_chr%I.e     
+#BSUB -n 16
+#BSUB -R "rusage[mem=16GB]"
+
+### ANCESTRY: MERGE CHUNKS TO CHROMOSOMES ### 
+module load plink/2.0-20240804
+
+# define ancestries and chromosome count
+ancestries=("AFR" "EUR" "MEN" "SAS" "EAS" "AMR" "OCN" "MIX")
+chromosomes=("1" "2" "3" "4" "5" "6" "7" "8" "9" "10" "11" "12" "13" "14" "15" "16" "17" "18" "19" "20" "21" "22")
+total_chrs=22
+
+anc_idx=$(( (LSB_JOBINDEX - 1) / total_chrs ))
+chr_idx=$(( (LSB_JOBINDEX - 1) % total_chrs ))
+ANC="${ancestries[$anc_idx]}"
+CHR="${chromosomes[$chr_idx]}"
+
+# directory setup 
+WDIR="/project/knathans_tecac/jenny/breast/analysis"
+INPUT_DIR="$WDIR/${ANC}/step2_chunk"
+MERGED_DIR="$WDIR/${ANC}/step2_chr"
+mkdir -p $MERGED_DIR
+cd $MERGED_DIR
+
+list_file="${MERGED_DIR}/chr${CHR}_files.txt"
+
+ls "${INPUT_DIR}"/step2_chr${CHR}_*_snp.pgen 2>/dev/null | \
+    sed 's/.pgen$//' | sort -V > "$list_file"
+
+plink2 --pmerge-list "$list_file" \
+    --make-pgen \
+    --out "step2_chr${CHR}" \
+    --threads 16
+
+# remove intermediate -merge files
+rm -f "step2_chr${CHR}-merge.pgen" "step2_chr${CHR}-merge.pvar" "step2_chr${CHR}-merge.psam"
+
+# ---------------------------
+# AFR chromosomes only 
+# bsub -hl -J "anc_chr[1-22]" < 06b_imp_merge.bsub

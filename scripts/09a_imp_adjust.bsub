@@ -1,0 +1,48 @@
+#!/bin/bash
+#BSUB -J "all_psam[1-22]"
+#BSUB -o ../log/all_psam.%I.out
+#BSUB -e ../log/all_psam.%I.err
+#BSUB -R "rusage[mem=1GB]"
+
+### ALL ANCESTRIES: ADJUST PSAM FILES ###
+module load R/4.3
+
+CHR=$LSB_JOBINDEX
+
+# directory setup
+WDIR="/project/knathans_tecac/jenny/breast/analysis/ALL/step2_chr"
+ID_DIR="/project/knathans_tecac/jenny/breast/analysis/ids"
+cd "$WDIR"
+input_prefix="${WDIR}/step2_chr${CHR}_ind"
+
+cp ${input_prefix}.psam ${input_prefix}.psam.bak
+
+Rscript - <<EOF
+psam_data <- read.table("${input_prefix}.psam.bak", header = FALSE, stringsAsFactors = FALSE)
+colnames(psam_data) <- c("#IID", "SEX")
+
+case_file <- file.path("${ID_DIR}", "case_3rd_ids.txt")
+control_file <- file.path("${ID_DIR}", "control_3rd_ids.txt")
+cases <- if(file.exists(case_file)) readLines(case_file) else character(0)
+controls <- if(file.exists(control_file)) readLines(control_file) else character(0)
+
+new_psam <- data.frame(
+  FID = 0,
+  IID = psam_data[,1],
+  SEX = 2,
+  PHENO = ifelse(psam_data[,1] %in% cases, 1,
+                ifelse(psam_data[,1] %in% controls, 0, NA)),
+  stringsAsFactors = FALSE
+)
+
+cat("#FID\tIID\tSEX\tPHENO\n", file = "${input_prefix}.psam")
+
+write.table(new_psam, file = "${input_prefix}.psam",
+            sep = "\t", row.names = FALSE, quote = FALSE, na = "NA",
+            col.names = FALSE, append = TRUE)
+
+EOF
+
+# ---------------------------
+# Test single chromosome:
+# bsub -J "all_psam[1]" < 09a_imp_adjust.bsub

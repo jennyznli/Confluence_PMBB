@@ -1,0 +1,27 @@
+#!/bin/bash
+#BSUB -J "anc_genome_plot[1-8]"
+#BSUB -o ../log/anc_genome_plot.%I.out
+#BSUB -e ../log/anc_genome_plot.%I.err
+#BSUB -R "rusage[mem=8GB]"
+
+module load R/4.3
+
+# define ancestries
+ANC_GROUPS=("AFR" "EUR" "MEN" "SAS" "EAS" "AMR" "OCN" "MIX")
+ANC="${ANC_GROUPS[$((LSB_JOBINDEX - 1))]}"
+
+# Set up environment
+WDIR="/project/knathans_tecac/jenny/breast"
+PLOT_DIR="$WDIR/plots/$ANC"
+mkdir -p "$PLOT_DIR"
+
+input_file="$WDIR/analysis/$ANC/regenie/${ANC}_step2_genome.regenie"
+output_prefix="$PLOT_DIR/${ANC}_genome"
+
+# filter for MAF > 0.05
+awk 'print { $6 > 0.05 }' $0 > ${input_file}.tmp 
+
+Rscript genome_regenie_plot.R ${input_file}.tmp $output_prefix
+
+# ---------------------------
+# bsub -J "anc_genome_plot[1]" < 14b_genome_plot.bsub

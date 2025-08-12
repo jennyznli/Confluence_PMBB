@@ -1,0 +1,20 @@
+#!/bin/bash
+#BSUB -J all_pca
+#BSUB -o ../log/all_pca.out
+#BSUB -e ../log/all_pca.err
+#BSUB -n 16        
+#BSUB -R "rusage[mem=32GB]"
+
+### ALL ANCESTRIES: PCA ###
+module load plink/2.0
+
+# directory setup
+WDIR="/project/knathans_tecac/jenny/breast/analysis/ALL/cov"
+INPUT_FILE="/project/knathans_tecac/jenny/breast/analysis/ALL/step1/common_snps_qc"
+cd "$WDIR"
+
+### RUN PCA ###
+plink2 --bfile "${INPUT_FILE}" \
+      --pca 10 \
+      --out "common_snps_qc" \
+      --threads 16

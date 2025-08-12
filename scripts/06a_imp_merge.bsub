@@ -1,0 +1,34 @@
+#!/bin/bash
+#BSUB -J "all_chr[1-22]"               
+#BSUB -o ../log/all_merge_chr%I.o
+#BSUB -e ../log/all_merge_chr%I.e
+#BSUB -n 16                            
+#BSUB -R "rusage[mem=16000]"
+
+### ALL ANCESTRIES: MERGE CHUNKS TO CHROMOSOMES ### 
+module load plink/2.0-20240804
+
+CHR=$LSB_JOBINDEX
+
+# directory setup 
+WDIR="/project/knathans_tecac/jenny/breast/analysis"
+INPUT_DIR="$WDIR/ALL/step2_chunk"
+MERGED_DIR="$WDIR/ALL/step2_chr"
+mkdir -p $MERGED_DIR
+cd $MERGED_DIR
+
+list_file="${MERGED_DIR}/chr${CHR}_files.txt"
+
+ls "${INPUT_DIR}"/step2_chr${CHR}_*_snp.pgen 2>/dev/null | \
+    sed 's/.pgen$//' | sort -V > "$list_file"
+
+plink2 --pmerge-list "$list_file" \
+    --make-pgen \
+    --out "step2_chr${CHR}" \
+    --threads 16
+
+# remove intermediate -merge files
+rm -f "step2_chr${CHR}-merge.pgen" "step2_chr${CHR}-merge.pvar" "step2_chr${CHR}-merge.psam"
+
+# ---------------------------
+# bsub -hl -J "all_chr[1]" < 06a_imp_merge.bsub

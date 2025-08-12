@@ -1,0 +1,27 @@
+#!/bin/bash
+#BSUB -J "all_chr_qc[1-22]"
+#BSUB -o ../log/all_chr_qc%I.o
+#BSUB -e ../log/all_chr_qc%I.e
+#BSUB -n 16
+#BSUB -R "rusage[mem=8GB]"
+
+### ALL ANCESTRIES: QC CHROMOSOMES ### 
+module load plink/2.0-20240804
+
+CHR=$LSB_JOBINDEX
+
+# directory setup 
+WDIR="/project/knathans_tecac/jenny/breast/analysis"
+MERGED_DIR="$WDIR/ALL/step2_chr"
+cd $MERGED_DIR
+
+### INDIVIDUAL QC ###
+plink2 --pfile "${MERGED_DIR}/step2_chr${CHR}" \
+     --remove "${WDIR}/ALL/cov/fid_iid_remove.txt" \
+     --make-pgen \
+     --out "${MERGED_DIR}/step2_chr${CHR}_ind"
+
+rm step2_chr${CHR}.psam step2_chr${CHR}.pvar step2_chr${CHR}.pgen
+
+# ---------------------------
+# bsub -hl -J "all_chr_qc[1]" < 08a_chr_qc.bsub

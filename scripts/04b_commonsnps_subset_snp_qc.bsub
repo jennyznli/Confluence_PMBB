@@ -1,0 +1,37 @@
+#!/bin/bash
+#BSUB -J ancestry_subset[1-8]
+#BSUB -o ../log/ancestry_subset.%J.%I.out
+#BSUB -e ../log/ancestry_subset.%J.%I.err
+#BSUB -n 1
+#BSUB -M 16GB
+#BSUB -R "rusage[mem=16GB]"
+#BSUB -W 01:00
+
+## ANCESTRY: COMMON SNPS SUBSET + QC ##
+module load plink/1.9-20210416
+module load plink/2.0
+
+ANC_GROUPS=("AFR" "EUR" "MEN" "SAS" "EAS" "AMR" "OCN" "MIX")
+ANC="${ANC_GROUPS[$((LSB_JOBINDEX-1))]}"
+
+# Directory setup
+HDIR="/project/knathans_tecac/jenny/breast"
+ADIR="$HDIR/analysis"
+ANC_DIR="$ADIR/${ANC}/step1"
+mkdir -p "$ANC_DIR"
+cd "$ANC_DIR"
+
+# Input files
+INPUT_FILE="$ADIR/ALL/step1/common_snps_snp"
+ID_FILE="$ADIR/ids/${ANC}_3rd_pids.txt"
+
+plink --bfile "$INPUT_FILE" \
+      --keep "$ID_FILE" \
+      --make-bed \
+      --hwe 1e-6 \
+      --maf 0.05 \
+      --write-snplist --write-samples --no-id-header \
+      --out "${ANC}_common_snps_qc"
+
+# ---------------------------
+# bsub -J "ancestry_subset[1-2]" < 04b_commonsnps_subset_snp_qc.bsub

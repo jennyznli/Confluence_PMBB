@@ -1,0 +1,26 @@
+#!/bin/bash
+#BSUB -J "grafanc_analysis"
+#BSUB -o ../log/grafanc_analysis.%J.out
+#BSUB -e ../log/grafanc_analysis.%J.err
+#BSUB -n 16
+#BSUB -M 64000
+#BSUB -R "rusage[mem=64GB]"
+#BSUB -W 8:00
+
+### RUN GRAFANC ### 
+
+module load htslib/1.9
+
+# Set up environment
+WDIR="/project/knathans_tecac/jenny/grafanc"
+MERGED_DIR="$WDIR/merged"
+OUTPUT_DIR="$WDIR/results"
+cd $WDIR
+
+mkdir -p "$OUTPUT_DIR"
+
+plink_prefix="${MERGED_DIR}/grafanc_pmbb"
+grafanc_output="${OUTPUT_DIR}/grafanc_pmbb_results.txt"
+
+"/home/jennyzli/grafanc/cpp/grafanc" "$plink_prefix" "$grafanc_output" --threads 16
+

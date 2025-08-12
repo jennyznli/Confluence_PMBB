@@ -1,0 +1,21 @@
+#!/bin/bash
+#BSUB -J "all_genome_plot"
+#BSUB -o ../log/all_genome_plot.out
+#BSUB -e ../log/all_genome_plot.err
+#BSUB -R "rusage[mem=8GB]"
+
+module load R/4.3
+
+# Set up environment
+WDIR="/project/knathans_tecac/jenny/breast"
+PLOT_DIR="$WDIR/plots/ALL"
+mkdir -p "$PLOT_DIR"
+
+input_file="$WDIR/analysis/ALL/regenie/ALL_step2_genome.regenie"
+output_prefix="$PLOT_DIR/ALL_genome"
+
+# filter for MAF > 0.05
+awk 'print { $6 > 0.05 }' $0 > ${input_file}.tmp 
+
+Rscript genome_regenie_plot.R ${input_file}.tmp $output_prefix
+

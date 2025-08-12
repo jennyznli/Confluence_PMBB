@@ -1,0 +1,17 @@
+#!/bin/bash
+#BSUB -J "mind_id[1-3]"
+
+### MAKE ID TO REMOVE FROM --MIND
+ANC_GROUPS=("AFR" "EUR" "ALL")
+ANC="${ANC_GROUPS[$((LSB_JOBINDEX-1))]}"
+
+WDIR="/project/knathans_tecac/jenny/breast/analysis"
+MERGED_DIR="$WDIR/${ANC}/step2_chr"
+cd $MERGED_DIR
+
+cat *.mindrem.id | sort -u | tail -n +2 | awk '{print "0\t"$1}' \
+    > "$WDIR/${ANC}/cov/fid_iid_remove.txt"
+
+# ---------------------------
+# bsub -hl -J "mind_id[1]" < 07c_chr_mind.bsub
+

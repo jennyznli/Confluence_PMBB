@@ -1,0 +1,39 @@
+#!/bin/bash
+#BSUB -J all_step1
+#BSUB -o ../log/all_step1.out
+#BSUB -e ../log/all_step1.err
+#BSUB -n 8
+#BSUB -M 32GB
+#BSUB -R "rusage[mem=32GB]"
+#BSUB -W 04:00
+
+### ALL ANCESTRIES: REGENIE STEP 1 ###
+
+module load regenie/3.4.1
+module load plink/2.0
+
+# directory setup
+ADIR="/project/knathans_tecac/jenny/breast/analysis/ALL"
+OUT_DIR="$ADIR/regenie"
+mkdir -p "$OUT_DIR"
+cd "$OUT_DIR"
+
+# remove any individuals that failed step2 QC
+plink2 --bfile ${ADIR}/step1/common_snps_qc \
+        --remove "${ADIR}/cov/fid_iid_remove.txt" \
+        --make-bed \
+        --out ${ADIR}/step1/common_snps_qcf
+
+regenie \
+  --step 1 \
+  --bed "${ADIR}/step1/common_snps_qcf" \
+  --phenoFile "${ADIR}/cov/phenotype.txt" \
+  --covarFile "${ADIR}/cov/covariates.txt" \
+  --remove "${ADIR}/cov/fid_iid_remove.txt"\
+  --strict \
+  --bt \
+  --bsize 1000 \
+  --threads 8 \
+  --out "ALL_step1" \
+  --loocv
+

@@ -1,0 +1,27 @@
+#!/bin/bash
+#BSUB -J "all_chr_mind[1-22]"
+#BSUB -o ../log/all_chr_mind%I.o
+#BSUB -e ../log/all_chr_mind%I.e
+#BSUB -n 1
+#BSUB -R "rusage[mem=8GB]"
+
+### ALL ANCESTRIES: --MIND CHROMOSOMES ### 
+module load plink/2.0-20240804
+
+CHR=$LSB_JOBINDEX
+
+# directory setup 
+WDIR="/project/knathans_tecac/jenny/breast/analysis"
+MERGED_DIR="$WDIR/ALL/step2_chr"
+cd $MERGED_DIR
+
+### INDIVIDUAL QC ###
+plink2 --pfile "${MERGED_DIR}/step2_chr${CHR}" \
+     --mind 0.05 \
+     --make-pgen \
+     --out "${MERGED_DIR}/step2_chr${CHR}_ind"
+
+rm step2_chr${CHR}_ind.psam step2_chr${CHR}_ind.pvar step2_chr${CHR}_ind.pgen
+
+# ---------------------------
+# bsub -hl -J "all_chr_mind[1]" < 07a_chr_mind.bsub

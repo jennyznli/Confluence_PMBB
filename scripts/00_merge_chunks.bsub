@@ -1,0 +1,34 @@
+#!/bin/bash
+#BSUB -J "merge_chunks"
+#BSUB -o ../log/merge_chunks.%J.out
+#BSUB -e ../log/merge_chunks.%J.err
+#BSUB -n 16
+#BSUB -M 32000
+#BSUB -R "rusage[mem=32GB]"
+#BSUB -W 2:00
+
+### MERGE GRAFANC CHUNKS ### 
+
+module load plink/1.9-20210416
+
+# Directory setup 
+WDIR="/project/knathans_tecac/jenny/grafanc"
+INPUT_DIR="$WDIR/chunk_bed"
+MERGED_DIR="$WDIR/merged"
+mkdir -p "$MERGED_DIR"
+cd "$MERGED_DIR"
+
+output="${MERGED_DIR}/grafanc_pmbb"
+
+list_file="${MERGED_DIR}/merge_files.txt"
+ls "${INPUT_DIR}"/grafanc*.bim 2>/dev/null | sed 's/\.bim$//' | sort -V > "$list_file"
+
+file_count=$(wc -l < "$list_file")
+
+plink --merge-list "$list_file" \
+    --make-bed \
+    --out "$output" \
+    --threads 16
+
+rm -f "$list_file"
+

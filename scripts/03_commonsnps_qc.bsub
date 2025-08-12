@@ -1,0 +1,34 @@
+#!/bin/bash
+
+### COMMON SNPS ALL ANCESTRIES QC ### 
+
+module load plink/2.0
+
+# Set base directories
+HDIR="/project/knathans_tecac/jenny/breast"
+ADIR="$HDIR/analysis"
+WDIR="$ADIR/ALL/step1"
+mkdir -p "$WDIR"
+cd "$WDIR"
+INPUT_FILE="$ADIR/ALL/step1/common_snps"
+
+# people with imputed & phenotype & unrelated
+SAMPLES="$ADIR/ids/imp_3rd_pids.txt"
+
+### VARIANT QC ###
+plink2 --bfile "$INPUT_FILE" \
+      --snps-only \
+      --autosome \
+      --keep $SAMPLES \
+      --geno 0.05 \
+      --threads 4 \
+      --out common_snps_snp \
+      --make-bed 
+
+### IND QC ###
+plink2 --bfile common_snps_snp \
+      --mind 0.05 \
+      --out common_snps_snp_ind \
+      --make-bed
+# none removed
+
